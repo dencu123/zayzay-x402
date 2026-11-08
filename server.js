@@ -1,76 +1,71 @@
-const express = require("express");
+
+import express from "express";
+import {
+  paymentMiddleware
+} from "@x402/express";
+
+import {
+  x402ResourceServer,
+  HTTPFacilitatorClient
+} from "@x402/core/server";
+
+import {
+  registerExactEvmScheme
+} from "@x402/evm/exact/server";
+
 const app = express();
 
-const challenge = {
-  accepts: [
-    {
-      scheme: "exact",
-      network: "eip155:8453",
-      amount: "0.01",
-      asset: "USDC",
-      payTo: "0x39f0698cba45d9ce44c5a75c36d1d418f8f6a1be",
-      maxTimeoutSeconds: 300,
-      extra: {
-        eip712Domain: {
-          name: "Zayzay API",
-          version: "1"
-        }
-      }
-    }
-  ]
-};
+const PORT = process.env.PORT || 3000;
 
-app.get("/openapi.json", (req, res) => {
-  res.json({
-    openapi: "3.0.0",
-    info: {
-      title: "Zayzay API",
-      version: "1.0.0"
-    },
-    paths: {
-      "/": {
-        get: {
-          summary: "Protected endpoint",
-          "x-payment-info": challenge,
-          responses: {
-            "402": {
-              description: "Payment Required"
+const PAY_TO =
+  "0x39f0698cba45d9ce44c5a75c36d1d418f8f6a1be";
+
+const facilitatorClient = new HTTPFacilitatorClient({
+  url: "https://api.cdp.coinbase.com/platform/v2/x402"
+});
+
+const server = new x402ResourceServer(facilitatorClient);
+
+registerExactEvmScheme(server);
+
+const routes = {
+  "GET /": {
+    price: "$0.01",
+    network: "eip155:8453",
+    payTo: PAY_TO,
+    description: "Zayzay API paid endpoint",
+    mimeType: "application/json",
+    extensions: {
+      bazaar: {
+        discoverable: true,
+        inputSchema: {
+          queryParams: {}
+        },
+        outputSchema: {
+          type: "object",
+          properties: {
+            success: {
+              type: "boolean"
+            },
+            message: {
+              type: "string"
             }
           }
         }
       }
     }
-  });
-});
+  }
+};
 
-app.get("/.well-known/x402", (req, res) => {
-  res.json({
-    version: 1,
-    resources: [
-      {
-        path: "/",
-        accepts: challenge.accepts
-      }
-    ]
-  });
-});
+app.use(paymentMiddleware(routes, server));
 
 app.get("/", (req, res) => {
-  res.setHeader(
-    "PAYMENT-REQUIRED",
-    JSON.stringify(challenge)
-  );
-
-  res.setHeader(
-    "Access-Control-Expose-Headers",
-    "PAYMENT-REQUIRED,PAYMENT-RESPONSE"
-  );
-
-  res.status(402).json(challenge);
+  res.json({
+    success: true,
+    message: "Welcome to Zayzay API"
+  });
 });
 
-const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(`Zayzay API running on port ${PORT}`);
 });
