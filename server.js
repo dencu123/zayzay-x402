@@ -1,4 +1,4 @@
-cconst express = require("express");
+const express = require("express");
 const app = express();
 
 const challenge = {
@@ -30,9 +30,8 @@ app.get("/openapi.json", (req, res) => {
     paths: {
       "/": {
         get: {
-          "x-payment-info": {
-            scheme: "x402"
-          },
+          summary: "Protected endpoint",
+          "x-payment-info": challenge,
           responses: {
             "402": {
               description: "Payment Required"
@@ -62,9 +61,16 @@ app.get("/", (req, res) => {
     JSON.stringify(challenge)
   );
 
+  res.setHeader(
+    "Access-Control-Expose-Headers",
+    "PAYMENT-REQUIRED,PAYMENT-RESPONSE"
+  );
+
   res.status(402).json(challenge);
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server running");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
