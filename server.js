@@ -1,17 +1,22 @@
-
+a
 import express from "express";
+
 import {
-  paymentMiddleware
+  paymentMiddleware,
+  x402ResourceServer
 } from "@x402/express";
 
 import {
-  x402ResourceServer,
   HTTPFacilitatorClient
 } from "@x402/core/server";
 
 import {
-  registerExactEvmScheme
+  ExactEvmScheme
 } from "@x402/evm/exact/server";
+
+import {
+  declareDiscoveryExtension
+} from "@x402/extensions/bazaar";
 
 const app = express();
 
@@ -20,39 +25,48 @@ const PORT = process.env.PORT || 3000;
 const PAY_TO =
   "0x39f0698cba45d9ce44c5a75c36d1d418f8f6a1be";
 
-const facilitatorClient = new HTTPFacilitatorClient({
-  url: "https://api.cdp.coinbase.com/platform/v2/x402"
+const facilitator = new HTTPFacilitatorClient({
+  url: "https://x402.org/facilitator"
 });
 
-const server = new x402ResourceServer(facilitatorClient);
-
-registerExactEvmScheme(server);
+const server = new x402ResourceServer(facilitator)
+  .register("eip155:8453", new ExactEvmScheme());
 
 const routes = {
   "GET /": {
-    price: "$0.01",
-    network: "eip155:8453",
-    payTo: PAY_TO,
+    accepts: [
+      {
+        scheme: "exact",
+        price: "$0.01",
+        network: "eip155:8453",
+        payTo: PAY_TO
+      }
+    ],
+
     description: "Zayzay API paid endpoint",
     mimeType: "application/json",
+
     extensions: {
-      bazaar: {
-        discoverable: true,
+      ...declareDiscoveryExtension({
+        input: {},
         inputSchema: {
-          queryParams: {}
+          properties: {},
+          required: []
         },
-        outputSchema: {
-          type: "object",
-          properties: {
-            success: {
-              type: "boolean"
-            },
-            message: {
-              type: "string"
+        output: {
+          example: {
+            success: true,
+            message: "Welcome to Zayzay API"
+          },
+          schema: {
+            type: "object",
+            properties: {
+              success: { type: "boolean" },
+              message: { type: "string" }
             }
           }
         }
-      }
+      })
     }
   }
 };
