@@ -1,9 +1,17 @@
+
 {
+  "name": "zayzay-x402",
+  "version": "1.0.0",
+  "description": "Zayzay x402 API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "express": "^4.21.0",
+    "express": "^4.22.3",
     "@x402/core": "latest",
     "@x402/evm": "latest",
-    "@x402/express": "latest"
+    "@x402/express": "latest",
+    "@x402/extensions": "latest"
   }
 }
-"@x402/extensions": "latest"
