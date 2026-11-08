@@ -1,87 +1,18 @@
 
-import express from "express";
-import {
-  paymentMiddleware,
-  x402ResourceServer
-} from "@x402/express";
-import { HTTPFacilitatorClient } from "@x402/core/server";
-import { ExactEvmScheme } from "@x402/evm/exact/server";
-import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
-
-const app = express();
-
-const PORT = process.env.PORT || 3000;
-
-const PAY_TO =
-  "0x39f0698cba45d9ce44c5a75c36d1d418f8f6a1be";
-
-const BASE_URL = "https://zayzay-x402.onrender.com";
-
-const facilitator = new HTTPFacilitatorClient({
-  url: "https://x402.org/facilitator"
-});
-
-const server = new x402ResourceServer(facilitator);
-
-server.register(
-  "eip155:*",
-  new ExactEvmScheme()
-);
-
-const routes = {
-  "GET /": {
-    accepts: {
-      scheme: "exact",
-      price: "$0.01",
-      network: "eip155:8453",
-      payTo: PAY_TO
-    },
-
-    description: "Zayzay API paid endpoint",
-
-    mimeType: "application/json",
-
-    resource: {
-      url: `${BASE_URL}/`,
-      description: "Zayzay x402 API",
-      serviceName: "Zayzay API",
-      tags: ["api", "x402", "base"]
-    },
-
-    extensions: {
-      ...declareDiscoveryExtension({
-        input: {},
-        inputSchema: {
-          type: "object",
-          properties: {}
-        },
-        output: {
-          example: {
-            success: true,
-            message: "Welcome to Zayzay API"
-          },
-          schema: {
-            type: "object",
-            properties: {
-              success: { type: "boolean" },
-              message: { type: "string" }
-            }
-          }
-        }
-      })
-    }
+{
+  "name": "zayzay-x402",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Zayzay API with x402 payments",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "@x402/core": "latest",
+    "@x402/evm": "latest",
+    "@x402/express": "latest",
+    "@x402/extensions": "latest"
   }
-};
-
-app.use(paymentMiddleware(routes, server));
-
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Welcome to Zayzay API"
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Zayzay x402 running on port ${PORT}`);
-});
+}
